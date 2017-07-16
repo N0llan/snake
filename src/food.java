@@ -14,7 +14,7 @@ public class Food {
 		this.xLoc = xLoc;
 		this.yLoc = yLoc;
 		try {
-			bufferedImage = ImageIO.read(new File(imgSrc));
+			setBufferedImage(ImageIO.read(new File(imgSrc)));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

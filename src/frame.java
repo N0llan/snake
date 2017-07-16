@@ -13,10 +13,10 @@ import javax.swing.JPanel;
 public class frame extends JPanel{
 	private int width = 800 , height= 800;	//Height and Width of window.
 	private JFrame frame;		
-	private int blkSize;				//Size of the snakeblock	
+	private int blkSize;					//Size of the snakeblock	
 	private int dir; 						//The direction of the snake
 	private boolean dirChanged = true;		//Boolean for changed direction to prevent 180 spin.
-	private int speed;				//Milliseconds for repeating task, in practice the speed of the snake
+	private int speed;						//Milliseconds for repeating task, in practice the speed of the snake
 	private int speedModule;
 	private Snake snake;
 	private TimerTask timerTaskSnakeMove;
@@ -79,12 +79,13 @@ public class frame extends JPanel{
 
 	public void paint(Graphics g) {
 		super.paintComponent(g);
+		snake.detImgSrc();
 		g.setColor(Color.RED);
 		g.drawImage(food.getBufferedImage(), food.getxLoc(), food.getyLoc(), food.getBlkSize(), food.getBlkSize(), null);
 		//g.fillRect(food.getxLoc(), food.getyLoc(), food.getBlkSize(), food.getBlkSize());
 		g.setColor(Color.GREEN);
 		for (SnakeBodypart snakeBodypart : snake.getSnake()) {
-			g.fillRect(snakeBodypart.getX(), snakeBodypart.getY(), blkSize, blkSize);
+			g.drawImage(snakeBodypart.getBufferedImage(), snakeBodypart.getX(), snakeBodypart.getY(), blkSize, blkSize, null);
 		}
 		
 		dirChanged = true;
