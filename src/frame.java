@@ -1,27 +1,29 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Random;
-import java.util.Stack;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.Vector;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.xml.transform.OutputKeys;
 
 public class frame extends JPanel{
 	private int width = 800 , height= 800;	//Height and Width of window.
 	private JFrame frame;		
-	private int delay = 0;					//Delay for repeating task
-	private int blkSize = 20;				//Size of the snakeblock	
+	private int blkSize;				//Size of the snakeblock	
 	private int dir; 						//The direction of the snake
 	private boolean dirChanged = true;		//Boolean for changed direction to prevent 180 spin.
-	private int speed = 100;				//Milliseconds for repeating task
+	private int speed;				//Milliseconds for repeating task, in practice the speed of the snake
+	private int speedModule;
 	private Snake snake;
+	private TimerTask timerTaskSnakeMove;
+	private Timer timerSnakeMove;
+	private Food food;
+
+	
 	
 	public frame(){
 		//Rita upp fönster
@@ -41,28 +43,64 @@ public class frame extends JPanel{
 	}
 	
 	private void init() {
-		dir = direction.NER.getValue();
+		speed = 100;
+		speedModule = 3;
+		blkSize = 20;
+//		timerTaskSnakeMove = new TimerTask() {
+//			@Override
+//			public void run() {
+//				move(snake.getSnake().getLast());
+//				//increaseSpeed();
+//				repaint();
+//			}
+//		};
+//		timerSnakeMove = new Timer(true);
+		food = new Food(randNumb(width-blkSize, blkSize), randNumb(height-blkSize, blkSize), blkSize);
+		snake = new Snake(randNumb(width-blkSize, blkSize), randNumb(height-blkSize, blkSize), randNumb(4, 1));
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				while (true) {
+					move(snake.getSnake().getLast());
+					increaseSpeed();
+					repaint();
+					try {
+						Thread.sleep(speed);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+		}).start();
+		
+		
+	}
+	
+	public void increaseSpeed() {
+		if (snake.getSnake().size() % speedModule == 0) {
+			speed *= 0.85;	
+			speedModule += 3;
+//			run();
+		}
 	}
 	
 	private void run() {
-		snake = new Snake(randNumb(), randNumb(), dir);
 		
-		TimerTask timerTask = new TimerTask() {
-			@Override
-			public void run() {
-				repaint();
-			}
-		};
-		Timer timer = new Timer(true);
-		timer.scheduleAtFixedRate(timerTask, 0, 1000);
+//		timerSnakeMove.scheduleAtFixedRate(timerTaskSnakeMove, 0, speed);
 	}
 	
 	public void paint(Graphics g) {
 		super.paintComponent(g);
-		move(snake.getSnake().getLast());
+		g.setColor(Color.RED);
+		
+		g.fillRect(food.getxLoc(), food.getyLoc(), food.getBlkSize(), food.getBlkSize());
+		g.setColor(Color.GREEN);
 		for (SnakeBodypart snakeBodypart : snake.getSnake()) {
 			g.fillRect(snakeBodypart.getX(), snakeBodypart.getY(), blkSize, blkSize);
 		}
+		
 		dirChanged = true;
 		
 	}
@@ -72,12 +110,12 @@ public class frame extends JPanel{
 			snakeBodypart.setY(snake.getSnake().getFirst().getY() - blkSize);
 			snakeBodypart.setX(snake.getSnake().getFirst().getX());
 			if (snakeBodypart.getY() < 0) {
-				snakeBodypart.setY(height);
+				snakeBodypart.setY(height-blkSize);
 			}	
 		} else if (snake.getSnake().getFirst().getDir() == direction.NER.getValue()){
 			snakeBodypart.setY(snake.getSnake().getFirst().getY() + blkSize);
 			snakeBodypart.setX(snake.getSnake().getFirst().getX());
-			if (snakeBodypart.getY() > height) {
+			if (snakeBodypart.getY() >= height) {
 				snakeBodypart.setY(0);
 			}	
 			
@@ -91,12 +129,27 @@ public class frame extends JPanel{
 		} else if (snake.getSnake().getFirst().getDir() == direction.HÖGER.getValue()){
 			snakeBodypart.setX(snake.getSnake().getFirst().getX() + blkSize);
 			snakeBodypart.setY(snake.getSnake().getFirst().getY());
-			if (snakeBodypart.getX() > height) {
+			if (snakeBodypart.getX() >= height) {
 				snakeBodypart.setX(0);
 			}		
 		}
 		snakeBodypart.setDir(snake.getSnake().getFirst().getDir());
 		snake.getSnake().addFirst(snake.getSnake().pollLast());
+		for (SnakeBodypart sBodypart : snake.getSnake()) {
+			if (snake.getSnake().getFirst() != sBodypart) {
+				if (sBodypart.getX() == snake.getSnake().getFirst().getX() && sBodypart.getY() == snake.getSnake().getFirst().getY()) {
+					System.out.println("DEAD");
+					snake = new Snake(randNumb(width-blkSize, blkSize), randNumb(height-blkSize, blkSize), randNumb(4, 1));
+					speedModule = 3;
+					speed = 100;
+				}
+			}
+		}
+		if (snake.getSnake().getFirst().getX() == food.getxLoc() && snake.getSnake().getFirst().getY() == food.getyLoc()) {
+			food = new Food(randNumb(width-blkSize, blkSize), randNumb(height-blkSize, blkSize), blkSize);
+			snake.increaseSnake(snake.getSnake().getLast().getDir(), blkSize);
+		}
+		
 	}
 	
 	public void addListener() {
@@ -144,21 +197,16 @@ public class frame extends JPanel{
 			if (snakeBodypart.getDir() != direction.VÄNSTER.getValue()) {
 				snakeBodypart.setDir(direction.HÖGER.getValue());
 			}	
-		} else if (id== KeyEvent.VK_SPACE) {
-			snake.increaseSnake(snakeBodypart.getDir(), blkSize);
-		}	
+		} 
 		
-//		if (snakeBodypart.getChild() != null) {
-//			snakeStack.push(snakeBodypart.getChild());
-//		}
 	}
-	
-	public int randNumb() {
+
+	public int randNumb(int maxNumber, int module) {
 		boolean numberOK = false;
 		int temp = 0;
 		while (!numberOK) {
-			temp = new Random().nextInt(width-0) + 0;
-			numberOK = temp % 20 == 0;
+			temp = new Random().nextInt(maxNumber) + 1;
+			numberOK = temp % module == 0;
 		}
 		if (numberOK) {
 			return temp;

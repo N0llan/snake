@@ -1,12 +1,6 @@
-import java.awt.Component;
-import java.awt.Graphics;
 import java.util.LinkedList;
-import java.util.Vector;
 
-import javax.swing.JPanel;
-
-public class Snake{
-	private double speed = 1; 															//MOVE BLOCKSIZE HERE
+public class Snake{															//MOVE BLOCKSIZE HERE
 	private LinkedList<SnakeBodypart>snake;
 	
 	

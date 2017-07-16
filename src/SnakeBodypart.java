@@ -1,5 +1,3 @@
-import javax.swing.JPanel;
-
 public class SnakeBodypart{
 	private int x, y;
 	private int dir;
