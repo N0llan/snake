@@ -27,6 +27,7 @@ public class frame extends JPanel{
 	
 	public frame(){
 		//Rita upp fönster
+		init();
 		frame = new JFrame("SNAKE");
 		//frame.setBackground(Color.white);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -36,25 +37,15 @@ public class frame extends JPanel{
 		frame.setResizable(false);
 		frame.pack();
 		frame.setVisible(true);
-		init();
-		addListener();
 		
-		run();
+		addListener();
+
 	}
 	
 	private void init() {
 		speed = 100;
 		speedModule = 3;
 		blkSize = 20;
-//		timerTaskSnakeMove = new TimerTask() {
-//			@Override
-//			public void run() {
-//				move(snake.getSnake().getLast());
-//				//increaseSpeed();
-//				repaint();
-//			}
-//		};
-//		timerSnakeMove = new Timer(true);
 		food = new Food(randNumb(width-blkSize, blkSize), randNumb(height-blkSize, blkSize), blkSize);
 		snake = new Snake(randNumb(width-blkSize, blkSize), randNumb(height-blkSize, blkSize), randNumb(4, 1));
 		new Thread(new Runnable() {
@@ -82,20 +73,15 @@ public class frame extends JPanel{
 		if (snake.getSnake().size() % speedModule == 0) {
 			speed *= 0.85;	
 			speedModule += 3;
-//			run();
+
 		}
 	}
-	
-	private void run() {
-		
-//		timerSnakeMove.scheduleAtFixedRate(timerTaskSnakeMove, 0, speed);
-	}
-	
+
 	public void paint(Graphics g) {
 		super.paintComponent(g);
 		g.setColor(Color.RED);
-		
-		g.fillRect(food.getxLoc(), food.getyLoc(), food.getBlkSize(), food.getBlkSize());
+		g.drawImage(food.getBufferedImage(), food.getxLoc(), food.getyLoc(), food.getBlkSize(), food.getBlkSize(), null);
+		//g.fillRect(food.getxLoc(), food.getyLoc(), food.getBlkSize(), food.getBlkSize());
 		g.setColor(Color.GREEN);
 		for (SnakeBodypart snakeBodypart : snake.getSnake()) {
 			g.fillRect(snakeBodypart.getX(), snakeBodypart.getY(), blkSize, blkSize);
