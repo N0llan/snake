@@ -1,53 +1,82 @@
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
-import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
 public class frame extends JPanel{
-	private int width = 800 , height= 800;	//Height and Width of window.
+	private int width = 400 , height= 400;	//Height and Width of window.
 	private JFrame frame;		
 	private int blkSize;					//Size of the snakeblock	
-	private int dir; 						//The direction of the snake
 	private boolean dirChanged = true;		//Boolean for changed direction to prevent 180 spin.
 	private int speed;						//Milliseconds for repeating task, in practice the speed of the snake
 	private int speedModule;
 	private Snake snake;
-	private TimerTask timerTaskSnakeMove;
-	private Timer timerSnakeMove;
 	private Food food;
-
+	private JMenuBar mainMenuBar;
+	private JMenuItem startGame;
+	private JMenu menu, settings;
 	
 	
 	public frame(){
 		//Rita upp fönster
 		init();
 		frame = new JFrame("SNAKE");
-		//frame.setBackground(Color.white);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setJMenuBar(mainMenuBar);
+		changeWindowSize();
+		
+		addListener();
+
+	}
+	
+	public void changeWindowSize(){
 		this.setPreferredSize(new Dimension(width, height));
 		frame.add(this);
 		this.setBackground(Color.WHITE);	
 		frame.setResizable(false);
 		frame.pack();
 		frame.setVisible(true);
-		
-		addListener();
-
 	}
 	
 	private void init() {
 		speed = 100;
 		speedModule = 3;
 		blkSize = 20;
+		createMenu();
+		startGame.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				startGame();
+				
+			}
+		});
+		
 		food = new Food(randNumb(width-blkSize, blkSize), randNumb(height-blkSize, blkSize), blkSize);
-		snake = new Snake(randNumb(width-blkSize, blkSize), randNumb(height-blkSize, blkSize), randNumb(4, 1));
+		snake = new Snake(randNumb(width-blkSize, blkSize), randNumb(height-blkSize, blkSize), randNumb(4, 1));	
+	}
+	
+	private void createMenu(){
+		menu = new JMenu("Arkiv");
+		settings = new JMenu("Settings");
+		mainMenuBar = new JMenuBar();
+		mainMenuBar.add(menu);
+		mainMenuBar.add(settings);
+		
+		startGame = new JMenuItem("Start");
+		menu.add(startGame);
+	}
+	
+	public void startGame(){
 		new Thread(new Runnable() {
 			
 			@Override
@@ -66,7 +95,6 @@ public class frame extends JPanel{
 			}
 		}).start();
 		
-		
 	}
 	
 	public void increaseSpeed() {
@@ -82,7 +110,6 @@ public class frame extends JPanel{
 		snake.detImgSrc();
 		g.setColor(Color.RED);
 		g.drawImage(food.getBufferedImage(), food.getxLoc(), food.getyLoc(), food.getBlkSize(), food.getBlkSize(), null);
-		//g.fillRect(food.getxLoc(), food.getyLoc(), food.getBlkSize(), food.getBlkSize());
 		g.setColor(Color.GREEN);
 		for (SnakeBodypart snakeBodypart : snake.getSnake()) {
 			g.drawImage(snakeBodypart.getBufferedImage(), snakeBodypart.getX(), snakeBodypart.getY(), blkSize, blkSize, null);
@@ -110,7 +137,7 @@ public class frame extends JPanel{
 			snakeBodypart.setX(snake.getSnake().getFirst().getX() - blkSize);
 			snakeBodypart.setY(snake.getSnake().getFirst().getY());
 			if (snakeBodypart.getX() < 0) {
-				snakeBodypart.setX(height);
+				snakeBodypart.setX(height - blkSize);
 			}	
 			
 		} else if (snake.getSnake().getFirst().getDir() == direction.HÖGER.getValue()){
@@ -122,6 +149,11 @@ public class frame extends JPanel{
 		}
 		snakeBodypart.setDir(snake.getSnake().getFirst().getDir());
 		snake.getSnake().addFirst(snake.getSnake().pollLast());
+		isSnakeDead();
+		foodOutsideSnake();		
+	}
+	
+	public void isSnakeDead(){
 		for (SnakeBodypart sBodypart : snake.getSnake()) {
 			if (snake.getSnake().getFirst() != sBodypart) {
 				if (sBodypart.getX() == snake.getSnake().getFirst().getX() && sBodypart.getY() == snake.getSnake().getFirst().getY()) {
@@ -132,11 +164,22 @@ public class frame extends JPanel{
 				}
 			}
 		}
+	}
+	
+	public void foodOutsideSnake(){
 		if (snake.getSnake().getFirst().getX() == food.getxLoc() && snake.getSnake().getFirst().getY() == food.getyLoc()) {
-			food = new Food(randNumb(width-blkSize, blkSize), randNumb(height-blkSize, blkSize), blkSize);
 			snake.increaseSnake(snake.getSnake().getLast().getDir(), blkSize);
+			boolean foodOutsideSnake = false;
+			while (!foodOutsideSnake){
+				foodOutsideSnake = true;
+				food = new Food(randNumb(width-blkSize, blkSize), randNumb(height-blkSize, blkSize), blkSize);
+				for (SnakeBodypart sBodypart : snake.getSnake()) {
+					if (food.getxLoc() == sBodypart.getX() && food.getyLoc() == sBodypart.getY()){
+						foodOutsideSnake = false;
+					}
+				}
+			}
 		}
-		
 	}
 	
 	public void addListener() {
